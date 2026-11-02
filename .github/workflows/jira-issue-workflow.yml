@@ -86,7 +86,7 @@ jobs:
             -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
             -X GET \
             -H "Accept: application/json" \
-            "${JIRA_BASE_URL%/}/rest/api/3/search?jql?jql=$encoded_jql&fields=key&maxResults=1")
+            "${JIRA_BASE_URL%/}/rest/api/3/search/jql?jql=$encoded_jql&fields=key&maxResults=1")
 
           printf '%s\n' "$response"
 
@@ -123,7 +123,7 @@ jobs:
           if [ "$ISSUE_TYPE" = "Epic" ]; then
             jira_type_name="에픽"
           else
-            jira_type_name="Task"
+            jira_type_name="작업"
           fi
 
           echo "project_key=$PROJECT_KEY"
