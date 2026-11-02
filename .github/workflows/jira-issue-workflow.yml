@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # GitHub Issue 정보에서 Jira 프로젝트 키를 찾는 단계
+      # GitHub Issue에서 프로젝트 키와 이슈 정보 추출
       - name: Get issue data
         id: issue-data
         uses: actions/github-script@v8
@@ -32,7 +32,6 @@ jobs:
             const titleMatch = title.match(/\[(USER|BOARD|QUIZ|ROOM)\]/i);
             const bodyMatch = body.match(/\b(USER|BOARD|QUIZ|ROOM)-\d+\b/i);
 
-            // 대소문자 통일
             if (titleMatch) {
               projectKey = titleMatch[1].toUpperCase();
             } else if (bodyMatch) {
@@ -44,7 +43,7 @@ jobs:
               return;
             }
 
-            // Epic / Task 구분
+            // IS / SUB 코드로 Epic과 Task 구분
             const isMatch = title.match(/\[(IS\d{3})\]/i);
             const subMatch = title.match(/\[(SUB\d{3})\]/i);
 
@@ -66,120 +65,154 @@ jobs:
             core.setOutput("sub_code", subCode);
             core.setOutput("issue_type", issueType);
 
-      # 서브 이슈(Task)면 부모 Epic 검색
+      # 기존 방식으로 부모 Epic 검색
       - name: Find parent epic
         id: find-parent-epic
         if: steps.issue-data.outputs.issue_type == 'Task'
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          PROJECT_KEY: ${{ steps.issue-data.outputs.project_key }}
+          IS_CODE: ${{ steps.issue-data.outputs.is_code }}
         run: |
-          is_label=$(echo "${{ steps.issue-data.outputs.is_code }}" | tr '[:upper:]' '[:lower:]')
+          is_label=$(printf '%s' "$IS_CODE" | tr '[:upper:]' '[:lower:]')
 
-          jql="project = ${{ steps.issue-data.outputs.project_key }} AND issuetype = Epic AND labels = $is_label ORDER BY created DESC"
+          jql="project = $PROJECT_KEY AND issuetype = Epic AND labels = $is_label ORDER BY created DESC"
 
-          encoded_jql=$(python3 -c "import urllib.parse; print(urllib.parse.quote('''$jql'''))")
+          encoded_jql=$(printf '%s' "$jql" | python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.stdin.read()))')
 
-          response=$(curl -s -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+          response=$(curl -sS \
+            -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
             -X GET \
             -H "Accept: application/json" \
-            "${{ secrets.JIRA_BASE_URL }}/rest/api/3/search?jql=$encoded_jql&fields=key&maxResults=1")
+            "${JIRA_BASE_URL%/}/rest/api/3/search?jql=$encoded_jql&fields=key&maxResults=1")
 
-          echo "$response"
+          printf '%s\n' "$response"
 
-          parent_key=$(echo "$response" | jq -r '.issues[0].key')
+          parent_key=$(printf '%s' "$response" | jq -r '.issues[0].key // empty')
 
-          if [ "$parent_key" = "null" ] || [ -z "$parent_key" ]; then
+          if [ -z "$parent_key" ]; then
             echo "상위 Epic을 찾을 수 없습니다."
-            echo "먼저 [${{ steps.issue-data.outputs.project_key }}][${{ steps.issue-data.outputs.is_code }}] 형식의 Epic 이슈를 생성해주세요."
+            echo "먼저 [$PROJECT_KEY][$IS_CODE] 형식의 Epic 이슈를 생성해주세요."
             exit 1
           fi
 
           echo "parent_key=$parent_key" >> "$GITHUB_OUTPUT"
 
-      # Jira Issue 생성
+      # 제목과 본문을 jq로 JSON 변환한 뒤 Jira Issue 생성
       - name: Create Jira issue
         id: create-jira
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          PROJECT_KEY: ${{ steps.issue-data.outputs.project_key }}
+          ISSUE_TYPE: ${{ steps.issue-data.outputs.issue_type }}
+          ISSUE_TITLE: ${{ steps.issue-data.outputs.title }}
+          ISSUE_BODY: ${{ steps.issue-data.outputs.body }}
+          ISSUE_URL: ${{ steps.issue-data.outputs.issue_url }}
+          IS_CODE: ${{ steps.issue-data.outputs.is_code }}
+          SUB_CODE: ${{ steps.issue-data.outputs.sub_code }}
+          PARENT_KEY: ${{ steps.find-parent-epic.outputs.parent_key }}
         run: |
-          echo "project_key=${{ steps.issue-data.outputs.project_key }}"
-          echo "issue_type=${{ steps.issue-data.outputs.issue_type }}"
+          echo "project_key=$PROJECT_KEY"
+          echo "issue_type=$ISSUE_TYPE"
 
-          is_label=$(echo "${{ steps.issue-data.outputs.is_code }}" | tr '[:upper:]' '[:lower:]')
-          sub_label=$(echo "${{ steps.issue-data.outputs.sub_code }}" | tr '[:upper:]' '[:lower:]')
+          is_label=$(printf '%s' "$IS_CODE" | tr '[:upper:]' '[:lower:]')
+          sub_label=$(printf '%s' "$SUB_CODE" | tr '[:upper:]' '[:lower:]')
 
-          if [ "${{ steps.issue-data.outputs.issue_type }}" = "Task" ]; then
-            parent_json=', "parent": { "key": "${{ steps.find-parent-epic.outputs.parent_key }}" }'
-          else
-            parent_json=''
-          fi
+          payload=$(jq -n \
+            --arg project "$PROJECT_KEY" \
+            --arg title "$ISSUE_TITLE" \
+            --arg body "$ISSUE_BODY" \
+            --arg url "$ISSUE_URL" \
+            --arg issue_type "$ISSUE_TYPE" \
+            --arg is_label "$is_label" \
+            --arg sub_label "$sub_label" \
+            --arg parent "$PARENT_KEY" \
+            '{
+              fields: {
+                project: {
+                  key: $project
+                },
+                summary: $title,
+                description: {
+                  type: "doc",
+                  version: 1,
+                  content: (
+                    [{
+                      type: "paragraph",
+                      content: [{
+                        type: "text",
+                        text: ("Github Issue: " + $url)
+                      }]
+                    }]
+                    + (
+                      if $body == "" then []
+                      else [{
+                        type: "paragraph",
+                        content: [{
+                          type: "text",
+                          text: $body
+                        }]
+                      }]
+                      end
+                    )
+                  )
+                },
+                issuetype: {
+                  name: $issue_type
+                },
+                labels: (
+                  [$is_label, "github"]
+                  + (
+                    if $sub_label == "" then []
+                    else [$sub_label]
+                    end
+                  )
+                )
+              }
+            }
+            | if $issue_type == "Task"
+              then .fields.parent = {key: $parent}
+              else .
+              end')
 
-          if [ -z "$sub_label" ]; then
-            labels_json='"labels": ["'"$is_label"'", "github"]'
-          else
-            labels_json='"labels": ["'"$is_label"'", "'"$sub_label"'", "github"]'
-          fi
-
-          response=$(curl -s -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+          response=$(curl -sS \
+            -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
             -X POST \
             -H "Accept: application/json" \
             -H "Content-Type: application/json" \
-            "${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue" \
-            --data '{
-              "fields": {
-                "project": {
-                  "key": "${{ steps.issue-data.outputs.project_key }}"
-                },
-                "summary": "${{ steps.issue-data.outputs.title }}",
-                "description": {
-                  "type": "doc",
-                  "version": 1,
-                  "content": [
-                    {
-                      "type": "paragraph",
-                      "content": [
-                        {
-                          "type": "text",
-                          "text": "Github Issue: ${{ steps.issue-data.outputs.issue_url }}"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "paragraph",
-                      "content": [
-                        {
-                          "type": "text",
-                          "text": "${{ steps.issue-data.outputs.body }}"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                "issuetype": {
-                  "name": "${{ steps.issue-data.outputs.issue_type }}"
-                },
-                '"$labels_json"'
-                '"$parent_json"'
-              }
-            }')
+            "${JIRA_BASE_URL%/}/rest/api/3/issue" \
+            --data "$payload")
 
-          echo "$response"
+          printf '%s\n' "$response"
 
-          jira_key=$(echo "$response" | jq -r '.key')
-          jira_url="${{ secrets.JIRA_BASE_URL }}/browse/$jira_key"
+          jira_key=$(printf '%s' "$response" | jq -r '.key // empty')
 
-          if [ "$jira_key" = "null" ] || [ -z "$jira_key" ]; then
+          if [ -z "$jira_key" ]; then
             echo "Jira Issue 생성 실패"
             exit 1
           fi
 
+          jira_url="${JIRA_BASE_URL%/}/browse/$jira_key"
+
           echo "jira_key=$jira_key" >> "$GITHUB_OUTPUT"
           echo "jira_url=$jira_url" >> "$GITHUB_OUTPUT"
 
-      # 생성된 Jira Issue 링크를 GitHub Issue 댓글로 작성
+      # 생성된 Jira 링크를 GitHub Issue 댓글로 작성
       - name: Comment Jira issue link
         uses: actions/github-script@v8
+        env:
+          JIRA_KEY: ${{ steps.create-jira.outputs.jira_key }}
+          JIRA_URL: ${{ steps.create-jira.outputs.jira_url }}
+          ISSUE_TYPE: ${{ steps.issue-data.outputs.issue_type }}
         with:
           script: |
-            const jiraKey = "${{ steps.create-jira.outputs.jira_key }}";
-            const jiraUrl = "${{ steps.create-jira.outputs.jira_url }}";
-            const issueType = "${{ steps.issue-data.outputs.issue_type }}";
+            const jiraKey = process.env.JIRA_KEY;
+            const jiraUrl = process.env.JIRA_URL;
+            const issueType = process.env.ISSUE_TYPE;
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
