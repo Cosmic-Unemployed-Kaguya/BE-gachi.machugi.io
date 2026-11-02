@@ -3,9 +3,11 @@ package kaguya.domain.quiz.grpc;
 import com.google.protobuf.Empty;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import java.util.List;
 import kaguya.domain.quiz.grpc.interceptor.GrpcContextKeys;
-import kaguya.domain.quiz.model.dto.request.QuizCreateRequest;
-import kaguya.domain.quiz.model.dto.request.QuizUpdateRequest;
+import kaguya.domain.quiz.model.dto.request.QuizCreateReq;
+import kaguya.domain.quiz.model.dto.request.QuizUpdateReq;
+import kaguya.domain.quiz.model.dto.response.QuizRes;
 import kaguya.domain.quiz.service.QuizService;
 import kaguya.grpc.quiz.CreateQuizRequest;
 import kaguya.grpc.quiz.DeleteQuizRequest;
@@ -41,7 +43,7 @@ public class QuizGrpcServer extends QuizServiceGrpc.QuizServiceImplBase {
             return;
         }
 
-        QuizCreateRequest reqData = new QuizCreateRequest(
+        QuizCreateReq reqData = new QuizCreateReq(
                 request.getTitle(),
                 request.getDescription(),
                 request.hasThumbnail() ? request.getThumbnail() : null,
@@ -49,7 +51,7 @@ public class QuizGrpcServer extends QuizServiceGrpc.QuizServiceImplBase {
                 creatorId
         );
 
-        var resData = quizService.createQuiz(reqData);
+        QuizRes resData = quizService.createQuiz(reqData);
 
         responseObserver.onNext(toProto(resData));
         responseObserver.onCompleted();
@@ -60,7 +62,7 @@ public class QuizGrpcServer extends QuizServiceGrpc.QuizServiceImplBase {
             GetQuizRequest request,
             StreamObserver<QuizResponse> responseObserver
     ) {
-        var resData = quizService.getQuiz(request.getQuizIdx());
+        QuizRes resData = quizService.getQuiz(request.getQuizIdx());
 
         responseObserver.onNext(toProto(resData));
         responseObserver.onCompleted();
@@ -71,13 +73,15 @@ public class QuizGrpcServer extends QuizServiceGrpc.QuizServiceImplBase {
             Empty request,
             StreamObserver<GetQuizListResponse> responseObserver
     ) {
-        var quizList = quizService.getQuizList().stream()
+        List<QuizResponse> quizList = quizService.getQuizList()
+                .stream()
                 .map(this::toProto)
                 .toList();
 
-        GetQuizListResponse response = GetQuizListResponse.newBuilder()
-                .addAllQuizList(quizList)
-                .build();
+        GetQuizListResponse response =
+                GetQuizListResponse.newBuilder()
+                        .addAllQuizList(quizList)
+                        .build();
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
@@ -90,14 +94,17 @@ public class QuizGrpcServer extends QuizServiceGrpc.QuizServiceImplBase {
     ) {
         // 다음 ISSUE 투두 : 로그인 및 작성자 권한 확인
 
-        QuizUpdateRequest reqData = new QuizUpdateRequest(
+        QuizUpdateReq reqData = new QuizUpdateReq(
                 request.hasTitle() ? request.getTitle() : null,
                 request.hasDescription() ? request.getDescription() : null,
                 request.hasThumbnail() ? request.getThumbnail() : null,
                 request.hasCategory() ? request.getCategory() : null
         );
 
-        var resData = quizService.updateQuiz(request.getQuizIdx(), reqData);
+        QuizRes resData = quizService.updateQuiz(
+                request.getQuizIdx(),
+                reqData
+        );
 
         responseObserver.onNext(toProto(resData));
         responseObserver.onCompleted();
@@ -116,9 +123,7 @@ public class QuizGrpcServer extends QuizServiceGrpc.QuizServiceImplBase {
         responseObserver.onCompleted();
     }
 
-    private QuizResponse toProto(
-            kaguya.domain.quiz.model.dto.response.QuizResponse data
-    ) {
+    private QuizResponse toProto(QuizRes data) {
         return QuizResponse.newBuilder()
                 .setIdx(data.idx())
                 .setTitle(data.title())

@@ -5,9 +5,9 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import kaguya.domain.quiz.model.dto.request.QuizCreateRequest;
-import kaguya.domain.quiz.model.dto.request.QuizUpdateRequest;
-import kaguya.domain.quiz.model.dto.response.QuizResponse;
+import kaguya.domain.quiz.model.dto.request.QuizCreateReq;
+import kaguya.domain.quiz.model.dto.request.QuizUpdateReq;
+import kaguya.domain.quiz.model.dto.response.QuizRes;
 import kaguya.domain.quiz.model.entity.QuizEntity;
 import kaguya.domain.quiz.repository.QuizRepository;
 import kaguya.domain.quiz.service.QuizService;
@@ -24,7 +24,7 @@ public class QuizServiceImpl implements QuizService {
 
     // 퀴즈 생성
     @Override
-    public QuizResponse createQuiz(QuizCreateRequest request) {
+    public QuizRes createQuiz(QuizCreateReq request) {
 
         QuizEntity quiz = quizMapper.requestToEntity(request);
         QuizEntity savedQuiz = quizRepository.save(quiz);
@@ -35,7 +35,7 @@ public class QuizServiceImpl implements QuizService {
     // 퀴즈 조회
     @Transactional(readOnly = true)
     @Override
-    public QuizResponse getQuiz(Long quizIdx) {
+    public QuizRes getQuiz(Long quizIdx) {
 
         QuizEntity quiz = quizRepository.findById(quizIdx)
                 .orElseThrow(() -> new RuntimeException("퀴즈가 존재하지 않습니다."));
@@ -46,7 +46,7 @@ public class QuizServiceImpl implements QuizService {
     // 퀴즈 전체 조회
     @Transactional(readOnly = true)
     @Override
-    public List<QuizResponse> getQuizList() {
+    public List<QuizRes> getQuizList() {
 
         List<QuizEntity> quizzes = quizRepository.findAll();
 
@@ -57,7 +57,7 @@ public class QuizServiceImpl implements QuizService {
 
     // 퀴즈 수정
     @Override
-    public QuizResponse updateQuiz(Long quizIdx, QuizUpdateRequest request) {
+    public QuizRes updateQuiz(Long quizIdx, QuizUpdateReq request) {
 
         QuizEntity quiz = quizRepository.findById(quizIdx)
                 .orElseThrow(() -> new RuntimeException("퀴즈가 존재하지 않습니다."));

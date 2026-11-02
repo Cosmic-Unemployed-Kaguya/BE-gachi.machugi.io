@@ -2,7 +2,9 @@ package kaguya.domain.answer.grpc;
 
 import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
-import kaguya.domain.answer.model.dto.request.AnswerRequest;
+import java.util.List;
+import kaguya.domain.answer.model.dto.request.AnswerReq;
+import kaguya.domain.answer.model.dto.response.AnswerRes;
 import kaguya.domain.answer.service.AnswerService;
 import kaguya.grpc.quiz.AnswerResponse;
 import kaguya.grpc.quiz.AnswerServiceGrpc;
@@ -29,9 +31,9 @@ public class AnswerGrpcServer
         // TODO: 로그인 및 퀴즈 작성자 권한 확인
         // TODO: 입력값 검증 및 상위 문제 존재 여부 확인
 
-        AnswerRequest reqData = new AnswerRequest(request.getAnswer());
+        AnswerReq reqData = new AnswerReq(request.getAnswer());
 
-        var resData = answerService.createAnswer(
+        AnswerRes resData = answerService.createAnswer(
                 request.getQuestionIdx(),
                 reqData
         );
@@ -47,7 +49,7 @@ public class AnswerGrpcServer
     ) {
         // TODO: 정답 편집용 조회에 대한 작성자 권한 확인
 
-        var answerList = answerService
+        List<AnswerResponse> answerList = answerService
                 .getAnswerList(request.getQuestionIdx())
                 .stream()
                 .map(this::toProto)
@@ -70,11 +72,11 @@ public class AnswerGrpcServer
         // TODO: 로그인 및 퀴즈 작성자 권한 확인
         // TODO: 입력값 검증
 
-        AnswerRequest reqData = new AnswerRequest(
+        AnswerReq reqData = new AnswerReq(
                 request.hasAnswer() ? request.getAnswer() : null
         );
 
-        var resData = answerService.patchAnswer(
+        AnswerRes resData = answerService.patchAnswer(
                 request.getAnswerIdx(),
                 reqData
         );
@@ -96,9 +98,7 @@ public class AnswerGrpcServer
         responseObserver.onCompleted();
     }
 
-    private AnswerResponse toProto(
-            kaguya.domain.answer.model.dto.response.AnswerResponse data
-    ) {
+    private AnswerResponse toProto(AnswerRes data) {
         return AnswerResponse.newBuilder()
                 .setIdx(data.idx())
                 .setQuestionIdx(data.questionIdx())
