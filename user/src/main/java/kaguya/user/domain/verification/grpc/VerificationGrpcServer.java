@@ -2,17 +2,12 @@ package kaguya.user.domain.verification.grpc;
 
 import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
-import kaguya.grpc.verification.CheckVerificationCodeRequest;
-import kaguya.grpc.verification.CheckVerificationCodeResponse;
-import kaguya.grpc.verification.SendVerificationCodeRequest;
-import kaguya.grpc.verification.VerificationServiceGrpc;
+import kaguya.grpc.verification.*;
 import kaguya.user.domain.verification.model.dto.request.CheckVerificationCodeReq;
 import kaguya.user.domain.verification.model.dto.request.SendVerificationCodeReq;
 import kaguya.user.domain.verification.model.dto.response.CheckVerificationCodeRes;
 import kaguya.user.domain.verification.model.enums.VerificationType;
 import kaguya.user.domain.verification.service.VerificationService;
-import kaguya.user.global.exception.BusinessException;
-import kaguya.user.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import net.devh.boot.grpc.server.service.GrpcService;
 
@@ -28,12 +23,7 @@ public class VerificationGrpcServer extends VerificationServiceGrpc.Verification
             StreamObserver<Empty> responseObserver
     ) {
 
-        // String -> Enum
-        VerificationType verificationType = VerificationType.from(request.getVerificationType());
-        if (verificationType == null) {
-            // 예외를 던지면 GlobalGrpcExceptionHandler가 가로채어 표준 gRPC 에러 응답으로 변환
-            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
-        }
+        VerificationType verificationType = toVerificationType(request.getVerificationType());
 
         SendVerificationCodeReq reqData = new SendVerificationCodeReq(
                 verificationType,
@@ -52,11 +42,7 @@ public class VerificationGrpcServer extends VerificationServiceGrpc.Verification
             StreamObserver<CheckVerificationCodeResponse> responseObserver
     ) {
 
-        // String -> Enum
-        VerificationType verificationType = VerificationType.from(request.getVerificationType());
-        if (verificationType == null) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
-        }
+        VerificationType verificationType = toVerificationType(request.getVerificationType());
 
         CheckVerificationCodeReq reqData = new CheckVerificationCodeReq(
                 verificationType,
@@ -67,10 +53,25 @@ public class VerificationGrpcServer extends VerificationServiceGrpc.Verification
         CheckVerificationCodeRes resData = verificationService.checkVerificationCode(reqData);
 
         CheckVerificationCodeResponse response = CheckVerificationCodeResponse.newBuilder()
-                        .setOneTimeAuthCode(resData.oneTimeAuthCode())
-                        .build();
+                .setOneTimeAuthCode(resData.oneTimeAuthCode())
+                .build();
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
+    }
+
+
+    /**
+     * 헬퍼 메서드
+     */
+    // GrpcVerificationType -> VerificationType
+    private VerificationType toVerificationType(GrpcVerificationType type) {
+        return switch (type) {
+            case REGISTER -> VerificationType.REGISTER;
+            case RESET_PASSWORD -> VerificationType.RESET_PASSWORD;
+            case REACTIVATE_ACCOUNT -> VerificationType.REACTIVATE_ACCOUNT;
+            case VERIFICATION_TYPE_UNSPECIFIED, UNRECOGNIZED
+                    -> throw new IllegalStateException("검증되지 않은 인증 타입: " + type);
+        };
     }
 }
