@@ -5,8 +5,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import kaguya.domain.answer.model.dto.request.AnswerRequest;
-import kaguya.domain.answer.model.dto.response.AnswerResponse;
+import kaguya.domain.answer.model.dto.request.AnswerReq;
+import kaguya.domain.answer.model.dto.response.AnswerRes;
 import kaguya.domain.answer.model.entity.AnswerEntity;
 import kaguya.domain.answer.repository.AnswerRepository;
 import kaguya.domain.answer.service.AnswerService;
@@ -23,7 +23,7 @@ public class AnswerServiceImpl implements AnswerService {
 
     // 정답 생성
     @Override
-    public AnswerResponse createAnswer(Long questionIdx, AnswerRequest request) {
+    public AnswerRes createAnswer(Long questionIdx, AnswerReq request) {
         AnswerEntity answer = answerMapper.requestToEntity(questionIdx, request);
         AnswerEntity savedAnswer = answerRepository.save(answer);
 
@@ -33,7 +33,7 @@ public class AnswerServiceImpl implements AnswerService {
     // 정답 조회
     @Override
     @Transactional(readOnly = true)
-    public List<AnswerResponse> getAnswerList(Long questionIdx) {
+    public List<AnswerRes> getAnswerList(Long questionIdx) {
         return answerRepository.findByQuestionIdx(questionIdx)
                 .stream()
                 .map(answerMapper::entityToResponse)
@@ -42,7 +42,7 @@ public class AnswerServiceImpl implements AnswerService {
 
     // 정답 수정
     @Override
-    public AnswerResponse patchAnswer(Long answerIdx, AnswerRequest request) {
+    public AnswerRes patchAnswer(Long answerIdx, AnswerReq request) {
         AnswerEntity answer = answerRepository.findById(answerIdx)
                 .orElseThrow(() -> new RuntimeException("정답이 존재하지 않습니다."));
 

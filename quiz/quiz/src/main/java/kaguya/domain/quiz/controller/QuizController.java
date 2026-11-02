@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import kaguya.domain.quiz.model.dto.request.QuizCreateRequest;
-import kaguya.domain.quiz.model.dto.request.QuizUpdateRequest;
-import kaguya.domain.quiz.model.dto.response.QuizResponse;
+import kaguya.domain.quiz.model.dto.request.QuizCreateReq;
+import kaguya.domain.quiz.model.dto.request.QuizUpdateReq;
+import kaguya.domain.quiz.model.dto.response.QuizRes;
 import kaguya.domain.quiz.service.QuizService;
 import lombok.RequiredArgsConstructor;
 
@@ -29,32 +29,32 @@ public class QuizController {
 
     // 퀴즈 생성 API
     @PostMapping
-    public ResponseEntity<QuizResponse> createQuiz(@RequestBody QuizCreateRequest request) {
-        QuizResponse response = quizService.createQuiz(request);
+    public ResponseEntity<QuizRes> createQuiz(@RequestBody QuizCreateReq request) {
+        QuizRes response = quizService.createQuiz(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     // 퀴즈 조회 API
     @GetMapping("/{quizIdx}")
-    public ResponseEntity<QuizResponse> getQuiz(@PathVariable("quizIdx") Long quizIdx) {
-        QuizResponse response = quizService.getQuiz(quizIdx);
+    public ResponseEntity<QuizRes> getQuiz(@PathVariable("quizIdx") Long quizIdx) {
+        QuizRes response = quizService.getQuiz(quizIdx);
         return ResponseEntity.ok(response);
     }
 
     // 퀴즈 전체 조회 API
     @GetMapping
-    public ResponseEntity<List<QuizResponse>> getQuizList() {
-        List<QuizResponse> response = quizService.getQuizList();
+    public ResponseEntity<List<QuizRes>> getQuizList() {
+        List<QuizRes> response = quizService.getQuizList();
         return ResponseEntity.ok(response);
     }
 
     // 퀴즈 수정 API
     @PatchMapping("/{quizIdx}")
-    public ResponseEntity<QuizResponse> updateQuiz(
+    public ResponseEntity<QuizRes> updateQuiz(
             @PathVariable("quizIdx") Long quizIdx,
-            @RequestBody QuizUpdateRequest request
+            @RequestBody QuizUpdateReq request
     ) {
-        QuizResponse response = quizService.updateQuiz(quizIdx, request);
+        QuizRes response = quizService.updateQuiz(quizIdx, request);
         return ResponseEntity.ok(response);
     }
 

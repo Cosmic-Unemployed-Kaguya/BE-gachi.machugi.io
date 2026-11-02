@@ -1,6 +1,6 @@
 package kaguya.domain.question.model.dto.request;
 
-public record QuestionRequest(
+public record QuestionReq(
         String problemText,
         String problemUrl,
         String type,

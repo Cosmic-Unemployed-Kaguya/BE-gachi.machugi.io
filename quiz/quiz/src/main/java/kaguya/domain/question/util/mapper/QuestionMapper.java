@@ -2,13 +2,13 @@ package kaguya.domain.question.util.mapper;
 
 import org.springframework.stereotype.Component;
 
-import kaguya.domain.question.model.dto.request.QuestionRequest;
-import kaguya.domain.question.model.dto.response.QuestionResponse;
+import kaguya.domain.question.model.dto.request.QuestionReq;
+import kaguya.domain.question.model.dto.response.QuestionRes;
 import kaguya.domain.question.model.entity.QuestionEntity;
 
 @Component
 public class QuestionMapper {
-    public QuestionEntity requestToEntity(Long quizIdx, QuestionRequest request) {
+    public QuestionEntity requestToEntity(Long quizIdx, QuestionReq request) {
         return QuestionEntity.builder()
                 .quizIdx(quizIdx)
                 .problemText(request.problemText())
@@ -18,8 +18,8 @@ public class QuestionMapper {
                 .build();
     }
 
-    public QuestionResponse entityToResponse(QuestionEntity question) {
-        return new QuestionResponse(
+    public QuestionRes entityToResponse(QuestionEntity question) {
+        return new QuestionRes(
                 question.getIdx(),
                 question.getQuizIdx(),
                 question.getProblemText(),
