@@ -104,6 +104,6 @@ public class AdminService {
 
         Page<UserManagementEntity> page = userManagementRepository.findByCondition(condition, pageable);
 
-        return userMapper.userManagementPageToGetBlocksInfoRes(page);
+        return adminMapper.userManagementPageToGetBlocksInfoRes(page);
     }
 }

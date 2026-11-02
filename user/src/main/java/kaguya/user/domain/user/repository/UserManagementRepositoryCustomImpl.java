@@ -62,7 +62,7 @@ public class UserManagementRepositoryCustomImpl implements UserManagementReposit
                         keywordContains(condition.searchType(), condition.keyword()),
                         managementTypeEq(condition.managementType())
                 );
-        // 실행 메서드(fetch/fetchOne) 미호출 -> 아직 DB에 안 보냄. getPage가 필요할 때만 실행
+                // 실행 메서드(fetch/fetchOne) 미호출 -> 아직 DB에 안 보냄. getPage가 필요할 때만 실행
 
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
     }

@@ -28,29 +28,38 @@ service VerificationService {
 }
 
 
+// --- Enums ---
+enum GrpcVerificationType {
+  VERIFICATION_TYPE_UNSPECIFIED = 0;
+  REGISTER = 1;
+  RESET_PASSWORD = 2;
+  REACTIVATE_ACCOUNT = 3;
+}
+
+
 // --- Request Messages ---
 message SendVerificationCodeRequest {
-  string verificationType = 1 [(validate.rules).string = {
-    min_len: 1,  // 문자의 최소 길이는 1 이상이어야 함 (@NotEmpty)
-    pattern: "^.*\\S.*$"  // 문자열 내에 공백이 아닌 문자가 최소 1개 있어야 함 (@NotBlank)
+  GrpcVerificationType verification_type = 1 [(validate.rules).enum = {
+    defined_only: true,
+    not_in: [0]  // UNSPECIFIED(0) 허용 안 함 (필수값)
   }];
-  string email = 2 [(validate.rules).string = {
-    min_len: 1,  // 문자의 최소 길이는 1 이상이어야 함 (@NotEmpty)
-    email: true  // 이메일 검증
+  string email = 3 [(validate.rules).string = {
+    email: true,
+    max_len: 254
   }];
 }
 
 message CheckVerificationCodeRequest {
-  string verificationType = 1 [(validate.rules).string = {
-    min_len: 1,
-    pattern: "^.*\\S.*$"
+  GrpcVerificationType verification_type = 1 [(validate.rules).enum = {
+    defined_only: true,
+    not_in: [0]
   }];
   string verificationCode = 2 [(validate.rules).string = {
     pattern: "^[a-zA-Z0-9]{6}$"  // 6자리 영문 대소문자, 숫자 검증
   }];
   string email = 3 [(validate.rules).string = {
-    min_len: 1,  // 문자의 최소 길이는 1 이상이어야 함 (@NotEmpty)
-    email: true  // 이메일 검증
+    email: true,
+    max_len: 254
   }];
 }
 
