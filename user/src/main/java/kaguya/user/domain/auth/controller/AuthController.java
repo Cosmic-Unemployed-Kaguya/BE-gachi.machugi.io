@@ -189,7 +189,7 @@ public class AuthController {
         GuestRes data = authService.guest(request);
 
         // Guest Cookie
-        ResponseCookie guestCookie = ResponseCookie.from("guestId", data.guestId())
+        ResponseCookie guestCookie = ResponseCookie.from("guestIdx", data.guestId())
                 .httpOnly(true)
                 .secure(false)
                 .path("/")
