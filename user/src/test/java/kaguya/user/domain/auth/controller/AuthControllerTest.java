@@ -205,8 +205,8 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.data").value(request.nickname()))
 
                 // 쿠키 검증
-                .andExpect(cookie().exists("guestId"))
-                .andExpect(cookie().value("guestId", response.guestId()));
+                .andExpect(cookie().exists("guestIdx"))
+                .andExpect(cookie().value("guestIdx", response.guestId()));
     }
 
 
