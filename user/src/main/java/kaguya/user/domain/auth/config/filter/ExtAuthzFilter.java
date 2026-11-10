@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import kaguya.user.domain.auth.model.dto.response.CheckTokenRes;
 import kaguya.user.domain.auth.service.AuthService;
 import kaguya.user.domain.user.model.enums.Role;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -23,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+@Slf4j
 @Component
 public class ExtAuthzFilter extends OncePerRequestFilter {
 
@@ -46,7 +48,8 @@ public class ExtAuthzFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return path.startsWith("/auth");
+        return path.startsWith("/auth")
+                || path.startsWith("/h2-console");  // todo. (개발용) H2 console. 운영시 삭제
     }
 
     /**
@@ -62,41 +65,47 @@ public class ExtAuthzFilter extends OncePerRequestFilter {
         String accessToken = (cookie != null) ? cookie.getValue() : null;
 
         // accessToken 값이 있으면 인증된 유저
-        if (accessToken != null) {
+        if (accessToken != null && !accessToken.isBlank()) {
             try {
                 CheckTokenRes checkRes = authService.checkToken(accessToken);  // 서비스 로직
 
-                // 유저 정보 헤더에 세팅
-                response.setHeader("X-User-Idx", checkRes.idx());  // 식별자
-                response.setHeader("X-User-Role", checkRes.role());  // 권한
+                // 회원 정보 헤더 세팅
+                response.setHeader("X-User-Role", checkRes.role());  // 권한 (USER / ADMIN)
+                response.setHeader("X-User-Idx", checkRes.idx());    // 회원 식별자 (Long)
+
+                // 회원에게 필요 없는 게스트 헤더는 Envoy가 제거 (클라이언트 조작 방지)
+                response.setHeader("x-envoy-auth-headers-to-remove", "x-guest-idx");
 
                 response.setStatus(HttpServletResponse.SC_OK);
                 return;
 
             } catch (Exception e) {
-                // 인증 토큰이 맞지 안을 경우 (토큰 불일치, 토큰 만료, 블랙 리스트)
+                // 인증 토큰이 맞지 않을 경우 (토큰 불일치, 토큰 만료, 블랙 리스트)
+                log.debug("토큰 검증 실패: {}", e.getMessage());
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);  // 401 Unauthorized
                 return;
             }
         }
+
         // accessToken 없으면 게스트
-        else {
-            // cookie의 guestId 값 가져오기
-            Cookie guestCookie = WebUtils.getCookie(request, "guestId");
-            String guestId = (guestCookie != null) ? guestCookie.getValue() : "";
+        // cookie의 guestId 값 가져오기
+        Cookie guestCookie = WebUtils.getCookie(request, "guestIdx");
+        String guestId = (guestCookie != null) ? guestCookie.getValue() : "";
 
-            // 잘못된 쿠키 값 차단
-            if (guestId.isBlank() || !uuidPattern.matcher(guestId).matches()) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);  // 400 차단
-                return;
-            }
-
-            // X-User-Idx에 게스트 UUID 및 권한 세팅
-            response.setHeader("X-User-Idx", guestId);
-            response.setHeader("X-User-Role", Role.GUEST.name());
-
-            response.setStatus(HttpServletResponse.SC_OK);
+        // 잘못된 쿠키 값 차단
+        if (guestId.isBlank() || !uuidPattern.matcher(guestId).matches()) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);  // 401 Unauthorized
+            return;
         }
+
+        // 게스트 정보 헤더 세팅
+        response.setHeader("X-User-Role", Role.GUEST.name());  // 권한 (GUEST)
+        response.setHeader("X-Guest-Idx", guestId);  // 게스트 식별자 (UUID)
+
+        // 게스트에게 필요 없는 회원 헤더는 Envoy가 요청에서 제거 (클라이언트 조작 방지)
+        response.setHeader("x-envoy-auth-headers-to-remove", "x-user-idx");
+
+        response.setStatus(HttpServletResponse.SC_OK);
     }
 
     /**

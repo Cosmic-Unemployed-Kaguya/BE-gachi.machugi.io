@@ -147,6 +147,17 @@ public class AuthService {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
+        // 유저 상태 체크
+        if (entity.getStatus() != Status.DORMANT) {
+            switch (entity.getStatus()) {
+                case ACTIVE -> throw new BusinessException(ErrorCode.USER_ACTIVE);
+                case SUSPENDED -> throw new BusinessException(ErrorCode.USER_SUSPENDED);
+                case BANNED -> throw new BusinessException(ErrorCode.USER_BANNED);
+                case WITHDRAWAL -> throw new BusinessException(ErrorCode.USER_WITHDRAWN);
+                default -> throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+            }
+        }
+
         // 유저 상태 Active(활성화)로 변경
         entity.changeStatus(Status.ACTIVE);
 
@@ -268,7 +279,8 @@ public class AuthService {
     private LoginRes processLoginSuccess(UserEntity entity) {
         // todo. 로그인 로그 기록
         //  - 현재는 로그인 하면 바로 DB에 현재시각 기록
-        //  - 여기서 통신 비용을 최소화한다면, redis에 로그인시간 기록 하고 특정 시간(ex. 04:00)에 DB로 옮기는 방식으로
+        //  - 여기서 통신 비용을 최소화한다면, redis에 로그인시간 기록 하고 특정 시간(ex. 04:00)에 스케쥴러+배치를 이용해 DB로 옮기는 방식으로
+        //  - 하지만 이 작업은 서비스를 이용하는 유저가 정말 많을 때 로직 변경
         entity.recordLogin();
 
         String subject = String.valueOf(entity.getIdx());

@@ -3,7 +3,7 @@ package kaguya.user.domain.user.grpc;
 import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
 import kaguya.grpc.user.*;
-import kaguya.user.domain.user.grpc.interceptor.GrpcContextKeys;
+import kaguya.user.global.grpc.interceptor.GrpcContextKeys;
 import kaguya.user.domain.user.model.dto.request.ResetPasswordReq;
 import kaguya.user.domain.user.model.dto.request.UpdatePasswordReq;
 import kaguya.user.domain.user.model.dto.response.MyPageRes;
@@ -21,11 +21,11 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
 
-    private final UserService userService;
-
     // 정규식 패턴
     private static final Pattern PASSWORD_PATTERN =
             Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,20}$");
+
+    private final UserService userService;
 
     @Override
     public void getMyPage(
@@ -33,12 +33,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
             StreamObserver<MyPageResponse> responseObserver
     ) {
 
-        Long idx = GrpcContextKeys.USER_IDX_CTX_KEY.get();
-        String role = GrpcContextKeys.USER_ROLE_CTX_KEY.get();
-        if (role == null || Role.GUEST.name().equals(role) || idx == null) {
-            // 예외를 던지면 GlobalGrpcExceptionHandler가 가로채어 표준 gRPC 에러 응답으로 변환
-            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
-        }
+        Long idx = checkUser();
 
         MyPageRes resData = userService.getMyPage(idx);
 
@@ -59,11 +54,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
             StreamObserver<ProfileResponse> responseObserver
     ) {
 
-        Long idx = GrpcContextKeys.USER_IDX_CTX_KEY.get();
-        String role = GrpcContextKeys.USER_ROLE_CTX_KEY.get();
-        if (role == null || Role.GUEST.name().equals(role) || idx == null) {
-            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
-        }
+        Long idx = checkUser();
 
         ProfileRes resData = userService.getProfile(idx);
 
@@ -84,11 +75,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
             StreamObserver<Empty> responseObserver
     ) {
 
-        Long idx = GrpcContextKeys.USER_IDX_CTX_KEY.get();
-        String role = GrpcContextKeys.USER_ROLE_CTX_KEY.get();
-        if (role == null || Role.GUEST.name().equals(role) || idx == null) {
-            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
-        }
+        Long idx = checkUser();
 
         String newPassword = request.getNewPassword();
         if (!PASSWORD_PATTERN.matcher(newPassword).matches()) {
@@ -112,11 +99,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
             StreamObserver<Empty> responseObserver
     ) {
 
-        Long idx = GrpcContextKeys.USER_IDX_CTX_KEY.get();
-        String role = GrpcContextKeys.USER_ROLE_CTX_KEY.get();
-        if (role == null || Role.GUEST.name().equals(role) || idx == null) {
-            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
-        }
+        Long idx = checkUser();
 
         userService.updateNickname(idx, request.getNickname());
 
@@ -130,11 +113,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
             StreamObserver<Empty> responseObserver
     ) {
 
-        Long idx = GrpcContextKeys.USER_IDX_CTX_KEY.get();
-        String role = GrpcContextKeys.USER_ROLE_CTX_KEY.get();
-        if (role == null || Role.GUEST.name().equals(role) || idx == null) {
-            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
-        }
+        Long idx = checkUser();
 
         userService.withdraw(idx);
 
@@ -162,7 +141,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
  */
 
     @Override
-    public void resetPassword (
+    public void resetPassword(
             ResetPasswordRequest request,
             StreamObserver<Empty> responseObserver
     ) {
@@ -172,9 +151,31 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
                 request.getNewPassword()
         );
 
+        if (!PASSWORD_PATTERN.matcher(reqData.newPassword()).matches()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
         userService.resetPassword(reqData);
 
         responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();
+    }
+
+
+    /**
+     * 헬퍼 메서드
+     */
+    // 로그인한 회원(USER, ADMIN)인지 확인. 필요한 경우 회원의 idx 반환
+    private Long checkUser() {
+
+        Long idx = GrpcContextKeys.USER_IDX_CTX_KEY.get();
+        String role = GrpcContextKeys.USER_ROLE_CTX_KEY.get();
+
+        if (role == null || Role.GUEST.name().equals(role) || idx == null) {
+            // 예외를 던지면 GlobalGrpcExceptionHandler가 가로채어 표준 gRPC 에러 응답으로 변환
+            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
+        }
+
+        return idx;
     }
 }

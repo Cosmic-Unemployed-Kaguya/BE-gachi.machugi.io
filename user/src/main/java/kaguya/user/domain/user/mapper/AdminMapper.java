@@ -7,6 +7,7 @@ import kaguya.user.domain.user.model.dto.response.GetUserDetailsRes;
 import kaguya.user.domain.user.model.dto.response.GetUsersInfoRes;
 import kaguya.user.domain.user.model.entity.UserEntity;
 import kaguya.user.domain.user.model.entity.UserManagementEntity;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -17,22 +18,25 @@ public class AdminMapper {
 
     // 메서드명 긴거 실화냐
 
-    // List<UserEntity> -> GetUsersInfoReq
-    public GetUsersInfoRes userListToGetUsersInfoReq(List<UserEntity> list) {
+    // Page<UserEntity> -> GetUsersInfoReq
+    public GetUsersInfoRes userListToGetUsersInfoReq(Page<UserEntity> page) {
 
-        // todo. findAll 말고 페이징/검색으로 변경
-        // 임시 방편 (findAll)
-        List<GetUserDetailsRes> userList = new ArrayList<>();
-        for (UserEntity userEntity : list) {
-            GetUserDetailsRes userInfo = userEntityToGetUserDetailsReq(userEntity);
-            userList.add(userInfo);
-        }
+        List<GetUserDetailsRes> userList = page.getContent().stream()
+                .map(this::userEntityToGetUserDetailsRes)
+                .toList();
 
-        return new GetUsersInfoRes(userList);
+        return new GetUsersInfoRes(
+                userList,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.hasNext()
+        );
     }
 
     // UserEntity -> GetUserDetailsReq
-    public GetUserDetailsRes userEntityToGetUserDetailsReq(UserEntity entity) {
+    public GetUserDetailsRes userEntityToGetUserDetailsRes(UserEntity entity) {
         return new GetUserDetailsRes(
                 entity.getIdx(),
                 entity.getEmail(),
@@ -57,24 +61,29 @@ public class AdminMapper {
         );
     }
 
-    // List<UserManagementEntity> -> GetBlocksInfoRes
-    public GetBlocksInfoRes userManagementListToGetBlocksInfoRes(List<UserManagementEntity> list) {
+    // Page<UserManagementEntity> -> GetBlocksInfoRes
+    public GetBlocksInfoRes userManagementPageToGetBlocksInfoRes(Page<UserManagementEntity> page) {
 
-        // todo. findAll 말고 페이징/검색으로 변경
-        // 임시 방편 (findAll)
         List<GetBlockDetailsRes> blockList = new ArrayList<>();
-        for (UserManagementEntity userManagementEntity : list) {
-            GetBlockDetailsRes blockInfo = userEntityToGetUserDetailsReq(userManagementEntity);
-            blockList.add(blockInfo);
+        for (UserManagementEntity userManagementEntity : page.getContent()) {
+            blockList.add(userManagementToGetBlockDetailsRes(userManagementEntity));
         }
 
-        return new GetBlocksInfoRes(blockList);
+        return new GetBlocksInfoRes(
+                blockList,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.hasNext()
+        );
     }
 
     // UserManagementEntity -> GetBlockDetailsRes
-    private GetBlockDetailsRes userEntityToGetUserDetailsReq(UserManagementEntity entity) {
+    private GetBlockDetailsRes userManagementToGetBlockDetailsRes(UserManagementEntity entity) {
         return new GetBlockDetailsRes(
                 entity.getIdx(),
+                entity.getUser().getIdx(),
                 entity.getUser().getEmail(),
                 entity.getUser().getNickname(),
                 entity.getManagementType().name(),

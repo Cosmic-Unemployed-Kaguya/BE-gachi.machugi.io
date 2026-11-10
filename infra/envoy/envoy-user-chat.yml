@@ -130,11 +130,13 @@ static_resources:
                   allowed_upstream_headers:
                     patterns:
                     - exact: "set-cookie"
-                    - exact: "x-user-idx"
                     - exact: "x-user-role"
+                    - exact: "x-user-idx"
+                    - exact: "x-guest-idx"
                   allowed_client_headers:
                     patterns:
                     - exact: "set-cookie"
+                    - exact: "content-type"
 
           # REST -> gRPC 변환 필터
           - name: envoy.filters.http.grpc_json_transcoder
