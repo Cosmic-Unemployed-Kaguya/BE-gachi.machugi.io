@@ -1,11 +1,12 @@
 import config from "@common/config";
-import { BaseRes } from "@common/model/base";
-import { QuizAnswerReq, QuizData } from "@common/model/quiz";
+import { BaseRes } from "@dto/base";
+import { QuizAnswerReq, QuizData } from "@dto/quiz";
 import logger from "@common/util/logger";
 import Redis from "ioredis";
 import { Inject, Service } from "typedi";
 import { RoomManager } from "../room/roomManager";
 import { RedisKvClient } from "./redisKvClient";
+import { SUB_TOPICS } from "@common/model/enums/redisSubTopics";
 
 @Service()
 export class RedisSubClient {
@@ -17,7 +18,6 @@ export class RedisSubClient {
     @Inject(() => RedisKvClient)
     private redisKvClient: RedisKvClient;
 
-    private EVENT_TYPE = ['base', 'correct'] as const;
 
     constructor(){
 
@@ -28,13 +28,13 @@ export class RedisSubClient {
 
     // 방 구독
     public async onSubscribeRoom(roomIdx: number) {
-        const channels = this.EVENT_TYPE.map(type => `room:${roomIdx}:${type}`)  
+        const channels = SUB_TOPICS.map(type => `room:${roomIdx}:${type}`)  
         await this.subClient.subscribe(...channels)
     }
 
     // 방 구독 해지
     public async unSubscribeRoom(roomIdx: number) : Promise<void>{
-        const channels = this.EVENT_TYPE.map(type => `room:${roomIdx}:${type}`)  
+        const channels = SUB_TOPICS.map(type => `room:${roomIdx}:${type}`)  
         await this.subClient.unsubscribe(...channels);
     }
 
@@ -45,8 +45,9 @@ export class RedisSubClient {
         
         try{
             logger.info(`[Redis 수신] 채널: ${channel}, 원본 메시지: ${message}`);
-            // channel = room:{roomIdx}
+            // channel = room:{roomIdx}:{subTopic}
             const roomIdxStr = channel.split(':')[1];
+            const subTopic = channel.split(':')[2];
 
             const roomIdx : number= Number(roomIdxStr)
 

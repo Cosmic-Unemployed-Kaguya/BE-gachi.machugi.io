@@ -1,4 +1,4 @@
-import { BaseError, BaseRes } from "@common/model/base";
+import { BaseError, BaseRes } from "@dto/base";
 import logger from "@common/util/logger";
 import { WebSocket } from "ws";
 import { WsError } from "./wsError";
@@ -11,7 +11,7 @@ export async function sendError (ws : WebSocket, error : WsError){
             code : error.code,
             message : error.message
         } as BaseError
-    } as BaseRes))
+    } ))
 }
 
 export const catchAsyncEvent = (fn : Function) =>{

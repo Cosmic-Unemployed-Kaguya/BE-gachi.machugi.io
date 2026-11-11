@@ -1,16 +1,17 @@
 import { WsError } from "@common/error/wsError";
-import { BaseRes } from "@common/model/base";
-import { CorrectAnswerRes } from "@common/model/correctAnswer";
-import { CustomSocket } from "@common/model/customSocket";
-import { ExitRoomRes } from "@common/model/exitRoom";
-import { JoinRoomReq, JoinSuccessRes } from "@common/model/joinRoom";
-import { MessageReq, MessageRes } from "@common/model/message";
+import { BaseRes } from "@dto/base";
+import { CorrectAnswerRes } from "@dto/correctAnswer";
+import { CustomSocket } from "@dto/customSocket";
+import { ExitRoomRes } from "@dto/exitRoom";
+import { JoinRoomReq, JoinSuccessRes } from "@dto/joinRoom";
+import { MessageReq, MessageRes } from "@dto/message";
 import logger from "@common/util/logger";
 import { MessageEvent } from "@decorator/messageEvent";
 import { Inject, Service } from "typedi";
 import { RedisKvClient } from "../redis/redisKvClient";
 import { RedisPubClient } from "../redis/redisPubClient";
 import { RoomManager } from "../room/roomManager";
+import { SUB_EVENTS } from "@common/model/enums/redisSubEvents";
 
 /**
  * 웹프레임워크의 Controller 격.
@@ -28,17 +29,14 @@ export class MessageEventHandler{
     @MessageEvent("join_room", JoinRoomReq)
     public async joinRoom(socket : CustomSocket, req : JoinRoomReq){
 
-        // // 1.zod를 통한 유효성 검사
-        // const req : JoinRoomReq = await JoinRoomReq.parseAsync(joinRoomReq)
-
         const roomIdx : number = req.roomIdx;
 
-        // 2.티켓 확인
+        // 1.티켓 확인
         if(!await this.redisKvClient.checkEnterTicket(socket.userIdx, req.roomIdx , req.ticketUuid)){
             throw WsError.fromType('INVALID_REQUEST')
         }
 
-        // 3.입장
+        // 2.입장
         this.roomManager.joinRoom(roomIdx,socket);
         
         // 응답 데이터
@@ -47,7 +45,7 @@ export class MessageEventHandler{
             data : {userNickname : socket.userNickname} as JoinSuccessRes
         }
         
-        // 4.redis로 전파
+        // 3.redis로 전파
         this.redisPubClient.publishMessage(roomIdx ,res);
 
         logger.info(`방 참여 ${req.roomIdx}`)
@@ -117,7 +115,7 @@ export class MessageEventHandler{
         // 퇴장
         this.roomManager.exitRoom(socket);
 
-        const res = {
+        const res : BaseRes = {
             event: "exit_room",
             data : {userNickname: socket.userNickname} as ExitRoomRes
         }

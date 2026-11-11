@@ -1,6 +1,6 @@
 import { WsError } from "@common/error/wsError";
 import { UserGrpcClient } from "@common/grpc-client/userClient";
-import { CustomSocket } from "@common/model/customSocket";
+import { CustomSocket } from "@dto/customSocket";
 import logger from "@common/util/logger";
 import { ServerEvent } from "@decorator/serverEvent";
 import { GetUserNicknameResponse } from "@generated/machugi/user/user_internal";

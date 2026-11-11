@@ -1,11 +1,12 @@
-import { CustomSocket } from "@common/model/customSocket";
-import { ExitRoomRes } from "@common/model/exitRoom";
+import { CustomSocket } from "@dto/customSocket";
+import { ExitRoomRes } from "@dto/exitRoom";
 import logger from "@common/util/logger";
 import { SocketEvent } from "@decorator/socketEvent";
 import { Inject, Service } from "typedi";
 import { RedisPubClient } from "../redis/redisPubClient";
 import { RoomManager } from "../room/roomManager";
-import { RoomGrpcClient } from './../common/grpc-client/roomClient';
+import { RoomGrpcClient } from '@common/grpc-client/roomClient';
+import { BaseRes } from "@dto/base";
 
 
 @Service()
@@ -30,7 +31,7 @@ export class SocketEventHandler{
             this.roomManager.exitRoom(socket);
 
             // 2. 해당 방 유저들에게 퇴장 알림
-            const res = {
+            const res : BaseRes = {
                 event: "exit_room",
                 data : {userNickname: socket.userNickname} as ExitRoomRes
             }

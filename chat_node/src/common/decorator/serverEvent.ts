@@ -1,14 +1,7 @@
-import { EventMetadata, ServerEventType } from "@common/model/event";
+import { ServerEventType } from "@common/model/enums/serverEvents";
+import { EventMetadata } from "@dto/event";
 import 'reflect-metadata';
 
-// export function ServerEventHandlerClass() : ClassDecorator{
-//     return function(constructor: Function){
-        
-
-
-//         Service()(constructor);
-//     }
-// }
 
 
 export function ServerEvent( event : ServerEventType ) : MethodDecorator {

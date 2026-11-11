@@ -1,16 +1,9 @@
 
-
-// export function SocketEvent(serverEvent : ServerEventType) : ClassDecorator{
-//     return function(constructor: Function){
-
-import { EventMetadata, SocketEventType } from "@common/model/event";
+import { SocketEventType } from "@common/model/enums/socketEvents";
+import { EventMetadata } from "@dto/event";
 import 'reflect-metadata';
-        
 
 
-//         Service()(constructor);
-//     }
-// }
 
 export function SocketEvent( event : SocketEventType ) : MethodDecorator {
     return function (

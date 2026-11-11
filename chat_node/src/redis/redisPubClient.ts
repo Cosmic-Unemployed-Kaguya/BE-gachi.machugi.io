@@ -1,4 +1,4 @@
-import { BaseRes } from '@common/model/base';
+import { BaseRes } from '@dto/base';
 import Redis from 'ioredis';
 import { Service } from 'typedi';
 import config from '../common/config';

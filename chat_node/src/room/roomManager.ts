@@ -1,5 +1,5 @@
-import { BaseRes } from "@common/model/base";
-import { CustomSocket } from "@common/model/customSocket";
+import { BaseRes } from "@dto/base";
+import { CustomSocket } from "@dto/customSocket";
 import { Inject, Service } from "typedi";
 import { RedisSubClient } from '../redis/redisSubClient';
 import { WsError } from './../common/error/wsError';

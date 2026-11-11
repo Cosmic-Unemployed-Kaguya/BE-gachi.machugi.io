@@ -1,6 +1,7 @@
-import { BaseReq } from '@common/model/base';
-import { CustomSocket } from '@common/model/customSocket';
-import { EventMetadata, MessageEventType } from '@common/model/event';
+import { BaseReq } from '@dto/base';
+import { MessageEventType } from '@common/model/enums/messageEvents';
+import { CustomSocket } from '@dto/customSocket';
+import { EventMetadata } from '@dto/event';
 import 'reflect-metadata';
 import z from 'zod';
 

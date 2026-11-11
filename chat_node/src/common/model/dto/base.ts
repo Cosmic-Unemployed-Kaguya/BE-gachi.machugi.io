@@ -6,6 +6,7 @@
 // }
 
 import { z } from 'zod';
+import { SubEventType } from '../enums/redisSubEvents';
 
 export const BaseReq = z.object({
     // 빈 문자열 방지
@@ -17,7 +18,7 @@ export const BaseReq = z.object({
 export type BaseReq = z.infer<typeof BaseReq>;
 
 export interface BaseRes {
-    event : string;
+    event : SubEventType;
     data? : any;
 }
 

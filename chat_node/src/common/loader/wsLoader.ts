@@ -1,8 +1,8 @@
 import { WsError } from '@common/error/wsError';
 import { catchAsyncEvent } from '@common/error/wsErrorHandler';
-import { BaseReq } from '@common/model/base';
-import { CustomSocket } from '@common/model/customSocket';
-import { EventMap, EventMetadata } from '@common/model/event';
+import { BaseReq } from '@dto/base';
+import { CustomSocket } from '@dto/customSocket';
+import { EventMap, EventMetadata } from '@dto/event';
 import 'reflect-metadata';
 import { Inject, Service } from "typedi";
 import { RawData, Server } from "ws";
