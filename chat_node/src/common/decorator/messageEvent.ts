@@ -4,18 +4,10 @@ import { CustomSocket } from "../model/customSocket";
 import { EventMetadata } from "../model/event";
 import { BaseReq } from "@common/model/baseReq";
 
-export function MessageEvent(
-    event: string,
-    schema?: z.ZodTypeAny,
-): MethodDecorator {
-    return function (
-        target: any,
-        property: string | symbol,
-        descriptor: PropertyDescriptor,
-    ) {
+export function MessageEvent(event: string, schema?: z.ZodTypeAny): MethodDecorator {
+    return function (target: any, property: string | symbol, descriptor: PropertyDescriptor) {
         // 1. 먼저 등록 된 이벤트 메서드 있는지?
-        const messageEv: EventMetadata[] =
-            Reflect.getMetadata("ws:message", target.constructor) || [];
+        const messageEv: EventMetadata[] = Reflect.getMetadata("ws:message", target.constructor) || [];
 
         // 2. 메타데이터에 이벤트명, 함수 이름 등록
         messageEv.push({ event: event, methodName: property });
@@ -24,10 +16,7 @@ export function MessageEvent(
         // 3. 기존 socket, baseReq를 파라미터로 받는 함수를 적어도 코드에서는 더 명확한 DTO 구조를 보이게
         let originalMethod = descriptor.value;
 
-        descriptor.value = async function (
-            socket: CustomSocket,
-            baseReq: BaseReq,
-        ) {
+        descriptor.value = async function (socket: CustomSocket, baseReq: BaseReq) {
             let data = baseReq.data;
 
             // 유효성 검사

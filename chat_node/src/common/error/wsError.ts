@@ -33,20 +33,9 @@ export class WsError extends Error {
         }
     }
 
-    public static fromType(
-        type: WsErrorType,
-        internalMessage?: string,
-        level: ErrorLevel = ErrorLevel.WARN,
-    ): WsError {
+    public static fromType(type: WsErrorType, internalMessage?: string, level: ErrorLevel = ErrorLevel.WARN): WsError {
         const { code, message } = WsErrorCode[type];
-        return new WsError(
-            code,
-            message,
-            true,
-            level,
-            undefined,
-            internalMessage,
-        );
+        return new WsError(code, message, true, level, undefined, internalMessage);
     }
 
     public static custom(
@@ -57,14 +46,7 @@ export class WsError extends Error {
         stack?: string,
         internalMessage?: string,
     ): WsError {
-        return new WsError(
-            code,
-            message,
-            isOperational,
-            level,
-            stack,
-            internalMessage,
-        );
+        return new WsError(code, message, isOperational, level, stack, internalMessage);
     }
 
     public static fatal(internalMessage: string, error?: unknown): WsError {
@@ -75,18 +57,9 @@ export class WsError extends Error {
 
         // 마찬가지로 에러를 받을 경우에는 해당 에러의 메세지를 내부메세지에 붙여둠.
         const errorDetail = error instanceof Error ? error.message : undefined;
-        const finalInternalMessage = errorDetail
-            ? `${internalMessage} - ${errorDetail}`
-            : internalMessage;
+        const finalInternalMessage = errorDetail ? `${internalMessage} - ${errorDetail}` : internalMessage;
 
-        return new WsError(
-            code,
-            message,
-            false,
-            ErrorLevel.ERROR,
-            stack,
-            finalInternalMessage,
-        );
+        return new WsError(code, message, false, ErrorLevel.ERROR, stack, finalInternalMessage);
     }
 }
 

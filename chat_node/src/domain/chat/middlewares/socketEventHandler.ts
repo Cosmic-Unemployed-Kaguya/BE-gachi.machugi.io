@@ -10,7 +10,6 @@ export class SocketEventHandler {
 
     @SocketEvent("close")
     public async close(socket: CustomSocket, code: number, reason: Buffer) {
-        
         await this.chatService.exitRoom(socket);
 
         logger.debug(` 연결 종료 : ${socket.userNickname}`);

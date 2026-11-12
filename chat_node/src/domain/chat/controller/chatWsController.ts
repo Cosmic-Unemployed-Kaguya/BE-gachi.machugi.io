@@ -20,11 +20,7 @@ export class ChatWsController {
 
     @MessageEvent("join_room", JoinRoomReq)
     public async joinRoom(socket: CustomSocket, req: JoinRoomReq) {
-
-        const res: JoinSuccessRes = await this.chatService.joinRoom(
-            socket,
-            req,
-        );
+        const res: JoinSuccessRes = await this.chatService.joinRoom(socket, req);
 
         // redis로 전파
         await this.redisPubClient.publishMessage(req.roomIdx, "join_room", res);
@@ -34,17 +30,12 @@ export class ChatWsController {
 
     @MessageEvent("chat", MessageReq)
     public async chat(socket: CustomSocket, req: MessageReq) {
-
         const data = await this.chatService.chat(socket, req);
 
         if (data[0] === true) {
             await this.redisPubClient.correctMessage(socket.roomIdx!, data[1]);
         } else {
-            await this.redisPubClient.publishMessage(
-                socket.roomIdx!,
-                "chat",
-                data[1],
-            );
+            await this.redisPubClient.publishMessage(socket.roomIdx!, "chat", data[1]);
         }
 
         logger.debug(`채팅 : ${socket.userNickname}  : ${req.msg}`);
@@ -52,14 +43,9 @@ export class ChatWsController {
 
     @MessageEvent("exit_room")
     public async exitRoom(socket: CustomSocket) {
-        
         const res = await this.chatService.exitRoom(socket);
 
-        await this.redisPubClient.publishMessage(
-            socket.roomIdx!,
-            "exit_room",
-            res,
-        );
+        await this.redisPubClient.publishMessage(socket.roomIdx!, "exit_room", res);
 
         logger.debug(`퇴장 : ${socket.userNickname}`);
     }

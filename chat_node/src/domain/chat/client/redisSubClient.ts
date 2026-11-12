@@ -24,20 +24,13 @@ export class RedisSubClient {
         await this.subClient.unsubscribe(...channels);
     }
 
-    public async bindOnMessage(
-        callback: (channel: string, message: string) => void | Promise<void>,
-    ) {
-        this.subClient.on(
-            "message",
-            async (channel: string, message: string) => {
-                try {
-                    await callback(channel, message);
-                } catch (err) {
-                    logger.error(
-                        `[Redis 수신 처리 중 에러] ${channel}, 메시지: ${message}, ${err}`,
-                    );
-                }
-            },
-        );
+    public async bindOnMessage(callback: (channel: string, message: string) => void | Promise<void>) {
+        this.subClient.on("message", async (channel: string, message: string) => {
+            try {
+                await callback(channel, message);
+            } catch (err) {
+                logger.error(`[Redis 수신 처리 중 에러] ${channel}, 메시지: ${message}, ${err}`);
+            }
+        });
     }
 }

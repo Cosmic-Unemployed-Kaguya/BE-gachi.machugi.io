@@ -19,18 +19,9 @@ export class ChatService {
     ) {}
 
     // 입장 검증 이후 입장 처리
-    public async joinRoom(
-        socket: CustomSocket,
-        req: JoinRoomReq,
-    ): Promise<JoinSuccessRes> {
+    public async joinRoom(socket: CustomSocket, req: JoinRoomReq): Promise<JoinSuccessRes> {
         // 1.티켓 확인
-        if (
-            !(await this.redisRepository.checkEnterTicket(
-                socket.userIdx,
-                req.roomIdx,
-                req.ticketUuid,
-            ))
-        ) {
+        if (!(await this.redisRepository.checkEnterTicket(socket.userIdx, req.roomIdx, req.ticketUuid))) {
             throw WsError.fromType("INVALID_REQUEST");
         }
 
@@ -41,25 +32,17 @@ export class ChatService {
     }
 
     // 일반 채팅과 정답 구분
-    public async chat(
-        socket: CustomSocket,
-        req: MessageReq,
-    ): Promise<[true, CorrectAnswerRes] | [false, MessageRes]> {
-
+    public async chat(socket: CustomSocket, req: MessageReq): Promise<[true, CorrectAnswerRes] | [false, MessageRes]> {
         if (!socket.roomIdx) {
             throw WsError.fromType("NOT_IN_ROOM");
         }
 
         // 정답 확인 로직
-        const room = this.roomManager.getRoom(socket.roomIdx!);
+        const room = this.roomManager.getRoom(socket.roomIdx);
 
-        if (
-            room.checkAnswer(req.msg) &&
+        if (room.checkAnswer(req.msg) &&
             // 정답일시 :redis를 통해 선점(SET + NX + EX)
-            (await this.redisRepository.setWithExpiration(
-                socket.roomIdx!,
-                socket.userIdx,
-            ))
+            await this.redisRepository.setWithExpiration(socket.roomIdx, socket.userIdx)
         ) {
             // 선점 성공 시
             return [
@@ -83,7 +66,6 @@ export class ChatService {
     }
 
     public async exitRoom(socket: CustomSocket): Promise<ExitRoomRes> {
-
         if (!socket.roomIdx) {
             throw WsError.fromType("NOT_IN_ROOM");
         }
@@ -100,6 +82,8 @@ export class ChatService {
                 userIdx: socket.userIdx,
             });
         } catch (err) {
+            // grpc 통신 실패 시
+            // @TODO 트랜잭션 처리
             throw WsError.fromType("INTERNAL_CONNECTION_ERROR");
         }
 
@@ -109,7 +93,6 @@ export class ChatService {
 
     // 정답 세팅 및 lock 해제 (다음 문제를 위한 준비)
     public async setAnswerAndReleaseLock(roomIdx: number, req: QuizAnswerReq) {
-        
         const room = this.roomManager.getRoom(roomIdx);
 
         room.setAnswer(req.answer);

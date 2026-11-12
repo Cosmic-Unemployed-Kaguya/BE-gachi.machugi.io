@@ -14,10 +14,7 @@ async function startServer() {
     };
 
     // loader 호출
-    await require("./common/loader").default(
-        { expressApp: app },
-        chatEventHandlers,
-    );
+    await require("./common/loader").default({ expressApp: app }, chatEventHandlers);
 }
 
 startServer();

@@ -29,8 +29,7 @@ export class ServerEventHandler {
         socket.userIdx = userIdx;
 
         try {
-            const userData: GetUserNicknameResponse =
-                await this.userClient.getUserNickname({ userIdx });
+            const userData: GetUserNicknameResponse = await this.userClient.getUserNickname({ userIdx });
             socket.userNickname = userData.nickname;
         } catch {
             // 만약 유저서비스와 통신에 실패 할 경우, 랜덤한 닉네임 부여

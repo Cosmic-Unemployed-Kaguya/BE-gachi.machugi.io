@@ -1,7 +1,4 @@
-import {
-    loadService,
-    startServer,
-} from "@cosmic-unemployed-kaguya/grpc-express";
+import { loadService, startServer } from "@cosmic-unemployed-kaguya/grpc-express";
 import express from "express";
 import Container from "typedi";
 import socket from "ws";
@@ -11,10 +8,7 @@ import config from "@common/config";
 import logger from "@common/util/logger";
 import { ChatRedisSubController } from "@domain/chat/controller/chatRedisSubController";
 
-export default async (
-    { expressApp }: { expressApp: express.Application },
-    chatEventHandlers: WsHandlerSet,
-) => {
+export default async ({ expressApp }: { expressApp: express.Application }, chatEventHandlers: WsHandlerSet) => {
     const port = config.port;
 
     logger.info("express 로드 시작");

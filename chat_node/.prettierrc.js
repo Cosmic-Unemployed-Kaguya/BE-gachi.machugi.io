@@ -1,5 +1,6 @@
 module.exports = {
   "tabWidth": 4, 
+  "printWidth": 120,
   "plugins": ["@trivago/prettier-plugin-sort-imports"],
   "importOrder": [
     "^node:",                     

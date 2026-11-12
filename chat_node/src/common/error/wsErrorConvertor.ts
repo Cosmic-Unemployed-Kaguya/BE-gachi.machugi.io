@@ -26,14 +26,7 @@ export const wsErrorConverter = (err: any): WsError => {
         // 내부 로깅용 메시지
         const internalMessage: string = error.message;
 
-        error = WsError.custom(
-            code,
-            message,
-            true,
-            ErrorLevel.WARN,
-            err.stack,
-            internalMessage,
-        );
+        error = WsError.custom(code, message, true, ErrorLevel.WARN, err.stack, internalMessage);
     }
 
     // 예상치 못한 에러
@@ -47,14 +40,7 @@ export const wsErrorConverter = (err: any): WsError => {
 
         const internalMessage = error.message;
 
-        error = WsError.custom(
-            code,
-            message,
-            false,
-            ErrorLevel.ERROR,
-            err.stack,
-            internalMessage,
-        );
+        error = WsError.custom(code, message, false, ErrorLevel.ERROR, err.stack, internalMessage);
     }
 
     return error;

@@ -18,12 +18,7 @@ export class RedisRepository {
      * 방에 유저가 들어오기 전, Room서비스와 상의가 된 이야기인지 확인
      * room에서 발급해준 ticketUuid를 가지고 왔냐?
      */
-    public async checkEnterTicket(
-        userIdx: number,
-        roomIdx: number,
-        ticketUuid: string,
-    ): Promise<boolean> {
-
+    public async checkEnterTicket(userIdx: number, roomIdx: number, ticketUuid: string): Promise<boolean> {
         const ticketKey = `ticket:${ticketUuid}`;
 
         // 1. 티켓 조회
@@ -35,8 +30,7 @@ export class RedisRepository {
         }
 
         // 2. 티켓 확인
-        const { userIdx: parsedUserIdx, roomIdx: parsedRoomIdx } =
-            JSON.parse(ticketData);
+        const { userIdx: parsedUserIdx, roomIdx: parsedRoomIdx } = JSON.parse(ticketData);
 
         // 2.1 티켓의 userIdx와 요청받은 userIdx가 다를경우
         if (parsedUserIdx != userIdx) {
@@ -59,11 +53,7 @@ export class RedisRepository {
      * SET + NX + EX
      * > 가장 먼저 저장한 놈만 저장되고 그 이후는 저장이 안되는 방식
      */
-    public async setWithExpiration(
-        roomIdx: number,
-        userIdx: number,
-    ): Promise<boolean> {
-
+    public async setWithExpiration(roomIdx: number, userIdx: number): Promise<boolean> {
         const key = "room:" + roomIdx + ":lock";
         const value = userIdx;
         const ttl = 10;
@@ -76,7 +66,6 @@ export class RedisRepository {
     }
 
     public async releaseLock(roomIdx: number): Promise<boolean> {
-        
         const key = "room:" + roomIdx + ":lock";
 
         const deletedCount = await this.kvClient.del(key);
