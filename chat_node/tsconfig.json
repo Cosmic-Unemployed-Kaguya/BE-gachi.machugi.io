@@ -14,8 +14,8 @@
     "types": ["node"],
 
     "paths": {
-      "@dto/*" : ["./src/common/model/dto/*"],
-      "@enum/*" : ["./src/common/model/enum/*"],
+      "@dto/*" : ["./src/domain/chat/model/dto/*"],
+      "@enum/*" : ["./src/domain/chat/model/enum/*"],
       "@decorator/*" : ["./src/common/decorator/*"], 
       "@domain/*" : ["./src/domain/*"],
       "@common/*" : ["./src/common/*"],
