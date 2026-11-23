@@ -4,11 +4,12 @@ import com.google.protobuf.Empty;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import java.util.List;
-import kaguya.domain.quiz.grpc.interceptor.GrpcContextKeys;
+
 import kaguya.domain.quiz.model.dto.request.QuizCreateReq;
 import kaguya.domain.quiz.model.dto.request.QuizUpdateReq;
 import kaguya.domain.quiz.model.dto.response.QuizRes;
 import kaguya.domain.quiz.service.QuizService;
+import kaguya.global.interceptor.GrpcContextKeys;
 import kaguya.grpc.quiz.CreateQuizRequest;
 import kaguya.grpc.quiz.DeleteQuizRequest;
 import kaguya.grpc.quiz.GetQuizListResponse;

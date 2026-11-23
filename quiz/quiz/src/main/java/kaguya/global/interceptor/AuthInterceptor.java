@@ -1,4 +1,4 @@
-package kaguya.domain.quiz.grpc.interceptor;
+package kaguya.global.interceptor;
 
 import io.grpc.Context;
 import io.grpc.Contexts;
