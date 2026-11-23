@@ -1,4 +1,4 @@
-package kaguya.user.domain.user.grpc.interceptor.validation;
+package kaguya.user.global.grpc.interceptor.validation;
 
 import com.google.rpc.ErrorInfo;
 import com.google.rpc.Status;

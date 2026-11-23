@@ -135,6 +135,7 @@ static_resources:
                   allowed_client_headers:
                     patterns:
                     - exact: "set-cookie"
+                    - exact: "content-type"
 
           # REST -> gRPC 변환 필터
           - name: envoy.filters.http.grpc_json_transcoder

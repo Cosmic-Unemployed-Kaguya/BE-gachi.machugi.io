@@ -1,4 +1,4 @@
-package kaguya.user.domain.user.grpc.interceptor;
+package kaguya.user.global.grpc.interceptor;
 
 import io.grpc.Context;
 import io.grpc.Metadata;

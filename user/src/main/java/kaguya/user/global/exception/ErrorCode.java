@@ -8,6 +8,8 @@ public enum ErrorCode {
     INVALID_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "400_INVALID_CURRENT_PASSWORD", "현재 비밀번호와 일치하지 않습니다."),
     SAME_AS_OLD_PASSWORD(HttpStatus.BAD_REQUEST, "400_SAME_AS_OLD_PASSWORD", "이전 비밀번호와 같습니다."),
     SAME_AS_OLD_NICKNAME(HttpStatus.BAD_REQUEST, "400_SAME_AS_OLD_NICKNAME", "이전 닉네임과 같습니다."),
+    INVALID_SORT_FIELD(HttpStatus.BAD_REQUEST, "400_INVALID_SORT_FIELD", "정렬할 수 없는 필드입니다."),
+    DUPLICATE_SORT_FIELD(HttpStatus.BAD_REQUEST, "400_DUPLICATE_SORT_FIELD", "정렬 필드가 중복되었습니다."),
 
     // 401 Unauthorized
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "401_INVALID_TOKEN", "토큰이 유효하지 않습니다."),  // (Front) 아무런 동작 안함 or 로그인 페이지로
@@ -22,6 +24,7 @@ public enum ErrorCode {
     ADMIN_ONLY(HttpStatus.FORBIDDEN, "403_ADMIN_ONLY", "접근 권한이 없습니다. (관리자 전용)"),
     AUTH_LOCKED(HttpStatus.FORBIDDEN, "403_AUTH_LOCKED", "인증횟수 초과로 인증이 취소되었습니다."),
 
+    USER_ACTIVE(HttpStatus.FORBIDDEN, "403_USER_ACTIVE", "이미 활성화 된 계정입니다. 다시 로그인을 시도해주세요."),
     USER_DORMANT(HttpStatus.FORBIDDEN, "403_USER_DORMANT", "휴면 처리된 계정입니다. 본인 인증을 통해 계정을 활성화해주세요."),
     USER_SUSPENDED(HttpStatus.FORBIDDEN, "403_USER_SUSPENDED", "운영 정책 위반으로 일시 정지된 계정입니다."),
     USER_BANNED(HttpStatus.FORBIDDEN, "403_USER_BANNED", "운영 정책 위반으로 영구 정지된 계정입니다."),

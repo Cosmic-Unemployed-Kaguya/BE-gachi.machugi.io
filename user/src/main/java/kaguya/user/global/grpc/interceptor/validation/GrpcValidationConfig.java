@@ -1,4 +1,4 @@
-package kaguya.user.domain.user.grpc.interceptor.validation;
+package kaguya.user.global.grpc.interceptor.validation;
 
 import io.grpc.ServerInterceptor;
 import net.devh.boot.grpc.server.interceptor.GrpcGlobalServerInterceptor;

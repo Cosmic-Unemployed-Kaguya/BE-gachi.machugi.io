@@ -72,3 +72,6 @@ board/.env
 /chat_spring/.gradle
 
 /chat_node/src/generated
+
+# IDE annotation processor 생성물 (QueryDSL Q클래스)
+/proto/generated/
