@@ -5,8 +5,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import kaguya.domain.question.model.dto.request.QuestionRequest;
-import kaguya.domain.question.model.dto.response.QuestionResponse;
+import kaguya.domain.question.model.dto.request.QuestionReq;
+import kaguya.domain.question.model.dto.response.QuestionRes;
 import kaguya.domain.question.model.entity.QuestionEntity;
 import kaguya.domain.question.repository.QuestionRepository;
 import kaguya.domain.question.service.QuestionService;
@@ -23,7 +23,7 @@ public class QuestionServiceImpl implements QuestionService {
 
     // 문제 생성
     @Override
-    public QuestionResponse createQuestion(Long quizIdx, QuestionRequest request) {
+    public QuestionRes createQuestion(Long quizIdx, QuestionReq request) {
         QuestionEntity question = questionMapper.requestToEntity(quizIdx, request);
         QuestionEntity savedQuestion = questionRepository.save(question);
 
@@ -33,7 +33,7 @@ public class QuestionServiceImpl implements QuestionService {
     // 문제 전체 조회
     @Override
     @Transactional(readOnly = true)
-    public List<QuestionResponse> getQuestionList(Long quizIdx) {
+    public List<QuestionRes> getQuestionList(Long quizIdx) {
         return questionRepository.findByQuizIdxOrderBySortOrderAsc(quizIdx)
                 .stream()
                 .map(questionMapper::entityToResponse)
@@ -43,7 +43,7 @@ public class QuestionServiceImpl implements QuestionService {
     // 문제 단일 조회 
     @Override
     @Transactional(readOnly = true)
-    public QuestionResponse getQuestion(Long questionIdx) {
+    public QuestionRes getQuestion(Long questionIdx) {
         QuestionEntity question = questionRepository.findById(questionIdx)
                 .orElseThrow(() -> new RuntimeException("문제가 존재하지 않습니다."));
 
@@ -52,7 +52,7 @@ public class QuestionServiceImpl implements QuestionService {
 
     // 문제 수정
     @Override
-    public QuestionResponse patchQuestion(Long questionIdx, QuestionRequest request) {
+    public QuestionRes patchQuestion(Long questionIdx, QuestionReq request) {
         QuestionEntity question = questionRepository.findById(questionIdx)
                 .orElseThrow(() -> new RuntimeException("문제가 존재하지 않습니다."));
 

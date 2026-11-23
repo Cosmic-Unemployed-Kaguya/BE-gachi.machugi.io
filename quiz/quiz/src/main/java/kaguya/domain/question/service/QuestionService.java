@@ -2,22 +2,22 @@ package kaguya.domain.question.service;
 
 import java.util.List;
 
-import kaguya.domain.question.model.dto.request.QuestionRequest;
-import kaguya.domain.question.model.dto.response.QuestionResponse;
+import kaguya.domain.question.model.dto.request.QuestionReq;
+import kaguya.domain.question.model.dto.response.QuestionRes;
 
 public interface QuestionService {
 
     // 문제 생성
-    QuestionResponse createQuestion(Long quizIdx, QuestionRequest request);
+    QuestionRes createQuestion(Long quizIdx, QuestionReq request);
 
     // 문제 전체 조회
-    List<QuestionResponse> getQuestionList(Long quizIdx);
+    List<QuestionRes> getQuestionList(Long quizIdx);
 
     // 문제 단일 조회
-    QuestionResponse getQuestion(Long questionIdx);
+    QuestionRes getQuestion(Long questionIdx);
 
     // 문제 수정
-    QuestionResponse patchQuestion(Long questionIdx, QuestionRequest request);
+    QuestionRes patchQuestion(Long questionIdx, QuestionReq request);
 
     // 문제 삭제
     void deleteQuestion(Long questionIdx);

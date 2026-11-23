@@ -2,23 +2,23 @@ package kaguya.domain.quiz.service;
 
 import java.util.List;
 
-import kaguya.domain.quiz.model.dto.request.QuizCreateRequest;
-import kaguya.domain.quiz.model.dto.request.QuizUpdateRequest;
-import kaguya.domain.quiz.model.dto.response.QuizResponse;
+import kaguya.domain.quiz.model.dto.request.QuizCreateReq;
+import kaguya.domain.quiz.model.dto.request.QuizUpdateReq;
+import kaguya.domain.quiz.model.dto.response.QuizRes;
 
 public interface QuizService {
 
     // 퀴즈 생성 
-    QuizResponse createQuiz(QuizCreateRequest request);
+    QuizRes createQuiz(QuizCreateReq request);
 
     // 퀴즈 조회
-    QuizResponse getQuiz(Long quizIdx);
+    QuizRes getQuiz(Long quizIdx);
 
     // 퀴즈 전체 조회
-    List<QuizResponse> getQuizList();
+    List<QuizRes> getQuizList();
 
     // 퀴즈 수정
-    QuizResponse updateQuiz(Long quizIdx, QuizUpdateRequest request);
+    QuizRes updateQuiz(Long quizIdx, QuizUpdateReq request);
 
     // 퀴즈 삭제
     void deleteQuiz(Long quizIdx);

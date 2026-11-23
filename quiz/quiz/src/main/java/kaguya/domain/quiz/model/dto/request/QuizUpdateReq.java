@@ -1,6 +1,6 @@
 package kaguya.domain.quiz.model.dto.request;
 
-public record QuizUpdateRequest (
+public record QuizUpdateReq (
 
     String title,
     String description,

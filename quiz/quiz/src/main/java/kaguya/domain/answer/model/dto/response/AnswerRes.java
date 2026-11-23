@@ -2,7 +2,7 @@ package kaguya.domain.answer.model.dto.response;
 
 import java.time.OffsetDateTime;
 
-public record AnswerResponse (
+public record AnswerRes (
         Long idx,
         Long questionIdx,
         String answer,
