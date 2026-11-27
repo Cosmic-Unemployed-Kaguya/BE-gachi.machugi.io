@@ -19,7 +19,7 @@ export class SocketEventHandler{
 
 
     @SocketEvent('close')
-    public close(socket : CustomSocket , code: number, reason: Buffer){
+    public async close(socket : CustomSocket , code: number, reason: Buffer){
         
         const roomIdx = socket.roomIdx;
         
@@ -37,8 +37,13 @@ export class SocketEventHandler{
 
             this.redisPubClient.publishMessage(roomIdx , res);
 
-            // 3. room 서비스에 알림
-            this.roomGrpcClient.exitUser({roomIdx : roomIdx, userIdx : socket.userIdx})
+            try{
+                // 3. room 서비스에 알림
+                await this.roomGrpcClient.exitUser({roomIdx : roomIdx, userIdx : socket.userIdx})
+            }catch(err){
+                logger.error('room서비스와 통신 중 에러 : ' + err);
+            }
+
         }
 
 
