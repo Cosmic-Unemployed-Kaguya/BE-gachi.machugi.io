@@ -51,6 +51,8 @@ if /i "%~1"=="ps"   goto :cmd_ps
 if /i "%~1"=="logs" goto :cmd_logs
 if not "%~1"=="" goto :usage
 
+rem 실행이 끝나면 :ask_restart 에서 여기로 되돌아와 처음부터 다시 실행
+:main_start
 call :check_env || goto :end_fail
 
 echo.
@@ -320,19 +322,24 @@ rem ===============================================================
 rem  종료
 rem ===============================================================
 :end_ok
-popd
-echo.
-pause
-if defined OLD_CP chcp %OLD_CP% <nul >nul
-exit /b 0
+set "RC=0"
+goto :ask_restart
 
 :end_fail
-popd
 echo.
 echo  중단되었습니다. 위 메시지를 확인하세요.
-pause
+set "RC=1"
+goto :ask_restart
+
+rem 대화형 실행이 끝나면 처음부터 다시 할지 묻고, 엔터(또는 입력 없음)면 종료
+:ask_restart
+echo.
+call :read_input ANS " 처음부터 다시 실행할까요? [r: 다시 / 엔터: 종료]: "
+if /i "!ANS!"=="r" goto :main_start
+if /i "!ANS!"=="y" goto :main_start
+popd
 if defined OLD_CP chcp %OLD_CP% <nul >nul
-exit /b 1
+exit /b %RC%
 
 :end_quiet
 set "RC=%ERRORLEVEL%"
